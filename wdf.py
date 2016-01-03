@@ -14,7 +14,7 @@ DEBUG = False
 
 MAX_GROUP_NUM = 35 # 每组人数
 
-QRImagePath = os.getcwd() + '/qrcode.jpg'
+QRImagePath = 'static/'
 
 tip = 0
 uuid = ''
@@ -48,9 +48,6 @@ def getUUID():
 	response = urllib2.urlopen(request)
 	data = response.read()
 
-	# print data
-
-	# window.QRLogin.code = 200; window.QRLogin.uuid = "oZwt_bFfRg==";
 	regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)"'
 	pm = re.search(regx, data)
 
@@ -75,19 +72,14 @@ def showQRImage():
 	response = urllib2.urlopen(request)
 
 	tip = 1
-
-	f = open(QRImagePath, 'wb')
+        
+        newQRImagePath = QRImagePath + str(int(time.time()))+".jpg"
+	f = open(newQRImagePath, 'wb')
 	f.write(response.read())
 	f.close()
-
-	if sys.platform.find('darwin') >= 0:
-		os.system('open %s' % QRImagePath)
-	elif sys.platform.find('linux') >= 0:
-		os.system('xdg-open %s' % QRImagePath)
-	else:
-		os.system('call %s' % QRImagePath)
-
-	print '请使用微信扫描二维码以登录'
+        
+        return newQRImagePath
+        
 
 def waitForLogin():
 	global tip, base_uri, redirect_uri
@@ -326,30 +318,34 @@ def addMember(ChatRoomName, UserNames):
 
 	return DelectedList
 
-def main():
+def get_user_qr():
 
 	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
 	urllib2.install_opener(opener)
 	
+        error_msg = None
 	if getUUID() == False:
-		print '获取uuid失败'
-		return
+                error_msg = '获取uuid失败'
+		print error_msg
+		return error_msg
 
-	showQRImage()
-	time.sleep(1)
+	qrPath = showQRImage()
+        return qrPath
 
+
+def check_user_delete(qrPath):
 	while waitForLogin() != '200':
 		pass
 
-	os.remove(QRImagePath)
+	os.remove(qrPath)
 
 	if login() == False:
 		print '登录失败'
-		return
+		return '登录失败'
 
 	if webwxinit() == False:
 		print '初始化失败'
-		return
+		return '初始化失败'
 
 	MemberList = webwxgetcontact()
 
@@ -370,11 +366,6 @@ def main():
 			UserNames.append(Member['UserName'])
 			NickNames.append(Member['NickName'].encode('utf-8'))
 
-		print '第%s组...' % (i + 1)
-		print ', '.join(NickNames)
-		print '回车键继续...'
-		raw_input()
-
 		# 新建群组/添加成员
 		if ChatRoomName == '':
 			(ChatRoomName, DelectedList) = createChatroom(UserNames)
@@ -386,9 +377,7 @@ def main():
 			result += DelectedList
 
 		print '找到%s个被删好友' % DelectedCount
-		# raw_input()
 
-		# 删除成员
 		deleteMember(ChatRoomName, UserNames)
 
 	# todo 删除群组
@@ -404,31 +393,7 @@ def main():
 
 	print '---------- 被删除的好友列表 ----------'
 	print '\n'.join(resultNames)
-	print '-----------------------------------'
+        return resultNames
 
-# windows下编码问题修复
-# http://blog.csdn.net/heyuxuanzee/article/details/8442718
-class UnicodeStreamFilter:  
-	def __init__(self, target):  
-		self.target = target  
-		self.encoding = 'utf-8'  
-		self.errors = 'replace'  
-		self.encode_to = self.target.encoding  
-	def write(self, s):  
-		if type(s) == str:  
-			s = s.decode('utf-8')  
-		s = s.encode(self.encode_to, self.errors).decode(self.encode_to)  
-		self.target.write(s)  
-		  
-if sys.stdout.encoding == 'cp936':  
-	sys.stdout = UnicodeStreamFilter(sys.stdout)
 
-if __name__ == '__main__' :
 
-	print '本程序的查询结果可能会引起一些心理上的不适,请小心使用...'
-	print '回车键继续...'
-	raw_input()
-
-	main()
-
-	raw_input()
