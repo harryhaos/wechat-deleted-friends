@@ -1,0 +1,22 @@
+<!doctype html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>删除查询</title>
+</head>
+
+<body>
+  {{ reminder_ }} <br/>
+  <img src="{{ url_for('static',filename=qr_img) }}" alt="qrcode">
+  <a href="{{ url_for('delete_result') }}">扫描后请点击</a>
+</body>
+</html>
+
+
+
+
+
+
+
+
