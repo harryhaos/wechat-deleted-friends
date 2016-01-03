@@ -3,7 +3,7 @@
 import os
 from flask import Flask, request, session, g, redirect, url_for, abort, \
     render_template, flash
-from sl2 import check_user_delete,get_user_qr
+from wdf import check_user_delete,get_user_qr
 
 app = Flask(__name__)
 
