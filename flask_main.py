@@ -35,7 +35,7 @@ def delete_result():
     result = check_user_delete(qrpath)
     if result is None:
         return "No data or no users detele you"
-    result.insert(0, u'以下好友删除了你：')
+    #result.insert(0, u'以下好友删除了你：')
     return unicode("\n".join(result), "utf-8")
 
 
